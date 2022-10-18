@@ -1,0 +1,27 @@
+{
+    "test_users": [
+        {
+            "username": "tesuser1",
+            "email": "testemail1@gmail.com",
+            "password": "test123"
+        },
+        {
+            "username": "tesuser2",
+            "email": "testemail2@gmail.com",
+            "password": "test123"
+        },
+        {
+            "username": "tesuser3",
+            "email": "testemail3@gmail.com",
+            "password": "test123"
+        }
+    ],
+    "test_groups": [
+        {
+            "name": "tesgroup1"
+        },
+        {
+            "name": "tesgroup2"
+        }
+    ]
+}

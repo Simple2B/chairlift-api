@@ -1,22 +1,26 @@
-import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, Boolean, String, DateTime, func, or_, Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    Boolean,
+    String,
+    DateTime,
+    func,
+    or_,
+    Enum,
+)
 
 from app.hash_utils import make_hash, hash_verify
 from app.database import Base, SessionLocal
 from .role import Role
 
 
-def gen_uid():
-    return str(uuid.uuid4())
-
-
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), default=gen_uid)
+
     username = Column(String(64), nullable=False, unique=True, index=True)
     email = Column(String(128), nullable=False, unique=True, index=True)
     password_hash = Column(String(256), nullable=False)
