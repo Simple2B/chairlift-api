@@ -1,4 +1,3 @@
-import datetime
 from datetime import datetime
 
 from sqlalchemy import (
@@ -9,7 +8,7 @@ from sqlalchemy import (
     Float,
     DateTime,
     ForeignKey,
-    BINARY,
+    LargeBinary,
 )
 
 from app.database import Base
@@ -67,4 +66,4 @@ class SensorData(Base):
     doy_swe = Column(Float(precision=3))
     temp_swe = Column(Float(precision=3))
 
-    health = Column(BINARY)
+    health = Column(LargeBinary)

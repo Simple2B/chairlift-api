@@ -6,7 +6,7 @@ from sqlalchemy import (
     Integer,
     String,
     DateTime,
-    BINARY,
+    LargeBinary,
 )
 
 from app.database import Base
@@ -25,5 +25,5 @@ class Firmware(Base):
 
     date = Column(DateTime(), default=datetime.now)
 
-    data = Column(BINARY())
-    bin = Column(BINARY())
+    data = Column(LargeBinary())
+    bin = Column(LargeBinary())
