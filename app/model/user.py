@@ -1,18 +1,42 @@
+import uuid
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, func, or_
+import enum
+from xmlrpc.client import Boolean
+
+from sqlalchemy import Column, Integer, String, DateTime, func, or_, Enum
 
 from app.hash_utils import make_hash, hash_verify
 from app.database import Base, SessionLocal
+
+
+def gen_uid():
+    return str(uuid.uuid4())
+
+
+class Role(enum.Enum):
+    Admin = "Admin"
+    Owner = "Owner"
+    Client = "Client"
+    NoneUser = "None"
 
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), default=gen_uid)
     username = Column(String(64), nullable=False, unique=True, index=True)
     email = Column(String(128), nullable=False, unique=True, index=True)
-    password_hash = Column(String(128), nullable=False)
+    password_hash = Column(String(256), nullable=False)
+
+    picture = Column(String(256), nullable=True)
+    verified = Column(Boolean, default=False)
     created_at = Column(DateTime(), default=datetime.now)
+
+    role = Column(Enum(Role), default=Role.NoneUser)
+
+    google_openid_key = Column(String(256))
+    apple_openid_key = Column(String(256))
 
     @property
     def password(self):
