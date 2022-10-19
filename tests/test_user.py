@@ -5,11 +5,43 @@ from sqlalchemy.orm import Session
 
 from app import model, schema
 
+USER_NAME = "michael"
+USER_EMAIL = "test@test.ku"
+USER_PASSWORD = "secret"
+
+
+def test_model_relations(db: Session, test_data: dict):
+    for user in test_data["test_users"]:
+        user_model: model.User = model.User(
+            username=user["username"], password=user["password"], email=user["email"]
+        )
+
+        db.add(user_model)
+        db.commit()
+
+    assert len(db.query(model.User).all()) == len(test_data["test_users"])
+
+    user_model = (
+        db.query(model.User)
+        .filter_by(username=test_data["test_users"][0]["username"])
+        .first()
+    )
+
+    for group in test_data["test_groups"]:
+        group["group_owner"] = user_model.id
+        group_model: model.Group = model.Group(**group)
+
+        db.add(group_model)
+        db.commit()
+
+    db.refresh(user_model)
+
+    # TODO add many to many user_group check
+    assert len(user_model.own_groups) == len(test_data["test_groups"])
+
 
 def test_auth(client: TestClient, db: Session):
-    USER_NAME = "michael"
-    USER_EMAIL = "test@test.ku"
-    USER_PASSWORD = "secret"
+
     # data = {"username": USER_NAME, "email": USER_EMAIL, "password": USER_PASSWORD}
     data = schema.UserCreate(
         username=USER_NAME,

@@ -1,5 +1,7 @@
 import pytest
+import json
 from typing import Generator
+
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -13,6 +15,12 @@ def client() -> Generator:
 
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture
+def test_data() -> Generator:
+    with open("tests/test_data.json") as f:
+        yield json.load(f)
 
 
 @pytest.fixture
