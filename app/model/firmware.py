@@ -13,9 +13,9 @@ from app.database import Base
 
 
 class Firmware(Base):
-    __tablename__ = "firmware"
+    __tablename__ = "firmwares"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, nullable=False, unique=True)
 
     model = Column(String(128))
 

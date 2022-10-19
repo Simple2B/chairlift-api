@@ -15,7 +15,7 @@ from app.database import Base
 
 
 class Sensor(Base):
-    __tablename__ = "sensor"
+    __tablename__ = "sensors"
 
     id = Column(Integer, primary_key=True)
     upload_id = Column(Integer)
@@ -32,25 +32,12 @@ class Sensor(Base):
     created_at = Column(DateTime(), default=datetime.now)
 
 
-class SensorKey(Base):
-    __tablename__ = "sensor_key"
-
-    id = Column(Integer, primary_key=True)
-
-    sensor_id = Column(Integer, ForeignKey("sensor.id"))
-    group_id = Column(Integer, ForeignKey("group.id"))
-
-    key_hash = Column(String(256))
-
-    created_at = Column(DateTime(), default=datetime.now)
-
-
 class SensorData(Base):
-    __tablename__ = "sensor_data"
+    __tablename__ = "sensor_datas"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, nullable=False, unique=True)
 
-    data_id = Column(Integer, ForeignKey("raw_data.id"))
+    data_id = Column(Integer, ForeignKey("raw_datas.id"))
 
     sensor_id = Column(String(256))
 

@@ -13,16 +13,16 @@ from app.database import Base
 
 
 class APIKey(Base):
-    __tablename__ = "api_key"
+    __tablename__ = "api_keys"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, nullable=False, unique=True)
 
-    group_id = Column(Integer, ForeignKey("group.id"))
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
 
-    name = Column(String(256))
+    name = Column(String(256), nullable=False)
 
-    sensor_role = Column(Enum(Role))
-    group_role = Column(Enum(Role))
+    sensor_role = Column(Enum(Role), default=Role.NoneRole)
+    group_role = Column(Enum(Role), default=Role.NoneRole)
 
     key_hash = Column(String(256))
 

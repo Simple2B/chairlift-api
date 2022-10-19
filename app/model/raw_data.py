@@ -13,13 +13,13 @@ from app.database import Base
 
 
 class RawData(Base):
-    __tablename__ = "raw_data"
+    __tablename__ = "raw_datas"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, nullable=False, unique=True)
 
-    upload_id = Column(Integer)
+    upload_id = Column(Integer, default=0)
 
-    sensor_id = Column(Integer, ForeignKey("sensor.id"))
+    sensor_id = Column(Integer, ForeignKey("sensors.id"))
 
     blob = Column(String(256))
 
