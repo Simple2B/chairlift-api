@@ -118,15 +118,13 @@ def test_google_auth(client: TestClient, db: Session):
                                      google_openid_key=USER_GOOGLE_ID,)
 
     response = client.post("/api/google_login", json=request.dict())
-    assert response.ok
-    # assert response and response.ok, "unexpected response"
+    assert response and response.ok, "unexpected response"
 
-    # ???
-    # token = schema.Token.parse_obj(response.json())
-    # headers = {"Authorization": f"Bearer {token.access_token}"}
+    token = schema.Token.parse_obj(response.json())
+    headers = {"Authorization": f"Bearer {token.access_token}"}
 
     # get user by id
-    # response = client.get(f"/user/{new_user.id}", headers=headers)
-    # assert response and response.ok
-    # user = schema.UserOut.parse_obj(response.json())
-    # assert user.username == USER_NAME
+    response = client.get(f"/api/user/{new_user.id}", headers=headers)
+    assert response and response.ok
+    user = schema.UserOut.parse_obj(response.json())
+    assert user.username == USER_NAME
