@@ -17,7 +17,7 @@ from .role import Role
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
 
@@ -27,9 +27,12 @@ class User(Base):
 
     picture = Column(String(256), nullable=True)
     verified = Column(Boolean, default=False)
+
+    is_deleted = Column(Boolean(), default=False)
+
     created_at = Column(DateTime(), default=datetime.now)
 
-    role = Column(Enum(Role), default=Role.NoneUser)
+    role = Column(Enum(Role), default=Role.NoneRole)
 
     google_openid_key = Column(String(256), nullable=True)
     apple_openid_key = Column(String(256), nullable=True)

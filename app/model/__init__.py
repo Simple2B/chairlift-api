@@ -8,5 +8,5 @@ from .group import Group
 from .raw_data import RawData
 from .role import Role
 from .sensor import Sensor
-
+from .sensor_key import SensorKey
 from app.database import Base
