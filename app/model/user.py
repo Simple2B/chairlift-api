@@ -23,9 +23,9 @@ class User(Base):
     Args:
 
         (id): Identification field
-        (username): User`s username
-        (email): User`s email
-        (password): User`s hashed password
+        (username): User's username
+        (email): User's email
+        (password): User's hashed password
         (picture): URL to picture
         (verified): Checks if user account verified by email or by OAuth provider
         (is_deleted): Checks if the user is deleted.In fact, we need this to maintain the integrity of the database

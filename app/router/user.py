@@ -5,11 +5,27 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from http import HTTPStatus
 
+from app.logger import log
+
 router = APIRouter(prefix="/user", tags=["Users"])
 
 
 @router.post("/", status_code=201, response_model=schema.UserOut)
 def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
+    """Creates a new user instance
+
+    Args:
+        user (schema.UserCreate): Gets user's data
+        db (Session, optional): Database sesion
+
+    Raises:
+        HTTPException: 409 Conflict
+        HTTPException: 409 Conflict
+
+    Returns:
+        _type_: A new user instance
+    """
+
     new_user = model.User(**user.dict())
     db.add(new_user)
     try:
@@ -17,16 +33,31 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         if db.query(model.User).filter_by(username=user.username).first():
+            log(
+                log.ERROR,
+                "User with such username [%s] - exists",
+                user.username,
+            )
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT, detail="Username already exists"
             )
+
         if db.query(model.User).filter_by(email=user.email).first():
+            log(
+                log.ERROR,
+                "User with such email [%s] - exists",
+                user.email,
+            )
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT, detail="Email already exists"
             )
 
     db.refresh(new_user)
-
+    log(
+        log.INFO,
+        "User [%s] - created",
+        user.email,
+    )
     return new_user
 
 
@@ -36,6 +67,18 @@ def get_user(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
+    """Gets user
+
+    Args:
+        id (int): ID of user
+        db (Session, optional):  Database sesion
+
+    Raises:
+        HTTPException: 404 - Not Found
+
+    Returns:
+        user: User instance
+    """
     user = db.query(model.User).get(id)
 
     if not user:

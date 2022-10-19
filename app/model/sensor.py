@@ -22,10 +22,10 @@ class Sensor(Base):
        (id): Identification field
        (upload_id): Id of upload
        (sensor_name): Name of the sensor
-       (sensor_location_x): Sensor`s location on x axis
-       (sensor_location_y): Sensor`s location on y axiss
-       (config): Sensor`s config data
-       (health): Sensor`s health data
+       (sensor_location_x): Sensor's location on x axis
+       (sensor_location_y): Sensor's location on y axiss
+       (config): Sensor's config data
+       (health): Sensor's health data
        (is_public): Checks if current sensor is public
        (created_at): Timestamp of creation date of current sensor
 

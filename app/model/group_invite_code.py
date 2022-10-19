@@ -25,7 +25,7 @@ class GroupInviteCode(Base):
        (invitation_date): Date of invitation
        (group_role): Foreign Key on Group model
        (sensor_role): Foreign Key on Sensor model
-       (email): Foreign Key on user`s email
+       (email): Foreign Key on user's email
 
     """
 
