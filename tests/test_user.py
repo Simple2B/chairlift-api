@@ -8,6 +8,7 @@ from app import model, schema
 USER_NAME = "michael"
 USER_EMAIL = "test@test.ku"
 USER_PASSWORD = "secret"
+USER_GOOGLE_ID = '123456789'
 
 
 def test_model_relations(db: Session, test_data: dict):
@@ -41,7 +42,6 @@ def test_model_relations(db: Session, test_data: dict):
 
 
 def test_auth(client: TestClient, db: Session):
-
     # data = {"username": USER_NAME, "email": USER_EMAIL, "password": USER_PASSWORD}
     data = schema.UserCreate(
         username=USER_NAME,
@@ -49,7 +49,7 @@ def test_auth(client: TestClient, db: Session):
         password=USER_PASSWORD,
     )
     # create new user
-    response = client.post("/user/", json=data.dict())
+    response = client.post("api/user/", json=data.dict())
     assert response.status_code == HTTPStatus.CREATED
 
     new_user = schema.UserOut.parse_obj(response.json())
@@ -58,26 +58,39 @@ def test_auth(client: TestClient, db: Session):
 
     # check if email already exists
     data.username += "abc"
-    response = client.post("/user/", json=data.dict())
+    response = client.post("/api/user/", json=data.dict())
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json()["detail"] == "Email already exists"
 
     # check if username already exists
     data.username = USER_NAME
     data.email += "abc"
-    response = client.post("/user/", json=data.dict())
+    response = client.post("/api/user/", json=data.dict())
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json()["detail"] == "Username already exists"
     # login by username and password
     response = client.post(
-        "/login", data=dict(username=USER_NAME, password=USER_PASSWORD)
+        "/api/login", data=dict(username=USER_NAME, password=USER_PASSWORD)
     )
     assert response and response.ok, "unexpected response"
     token = schema.Token.parse_obj(response.json())
     headers = {"Authorization": f"Bearer {token.access_token}"}
 
     # get user by id
-    response = client.get(f"/user/{new_user.id}", headers=headers)
+    response = client.get(f"/api/user/{new_user.id}", headers=headers)
     assert response and response.ok
     user = schema.UserOut.parse_obj(response.json())
     assert user.username == USER_NAME
+
+
+def test_google_auth(client: TestClient, db: Session):
+    request = schema.UserGoogleLogin(email=USER_EMAIL,
+                                     username=USER_NAME,
+                                     google_openid_key=USER_GOOGLE_ID,)
+
+    response = client.post("/api/google_login", json=request.dict())
+    assert response and response.ok, "unexpected response"
+
+    token = schema.Token.parse_obj(response.json())
+    headers = {"Authorization": f"Bearer {token.access_token}"}
+    assert headers
