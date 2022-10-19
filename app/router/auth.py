@@ -4,10 +4,8 @@ from sqlalchemy.orm import Session
 from app import schema
 from app.database import get_db
 from app import model
-from sqlalchemy.exc import IntegrityError
-from http import HTTPStatus
 from app.oauth2 import create_access_token
-from app.logger import log
+# from app.logger import log
 
 
 auth_router = APIRouter(tags=["Authentication"])
