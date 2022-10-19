@@ -117,9 +117,9 @@ def test_google_auth(client: TestClient, db: Session):
                                      username=USER_NAME,
                                      google_openid_key=USER_GOOGLE_ID,)
 
-    response = client.post("/api/google_login", data=request)
-    assert response
-    assert response and response.ok, "unexpected response"
+    response = client.post("/api/google_login", json=request.dict())
+    assert response.ok
+    # assert response and response.ok, "unexpected response"
 
     # ???
     # token = schema.Token.parse_obj(response.json())
