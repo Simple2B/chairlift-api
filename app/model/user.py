@@ -17,6 +17,24 @@ from .role import Role
 
 
 class User(Base):
+    """
+    Model that describes user
+
+    Args:
+
+        (id): Identification field
+        (username): User`s username
+        (email): User`s email
+        (password): User`s hashed password
+        (picture): URL to picture
+        (verified): Checks if user account verified by email or by OAuth provider
+        (is_deleted): Checks if the user is deleted.In fact, we need this to maintain the integrity of the database
+        (role): Assign role to current user
+        (google_openid_key): Token that proves that user really got signied-in via Google
+        (apple_openid_key): Token that proves that user really got signied-in via Apple
+
+    """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)

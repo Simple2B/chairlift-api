@@ -12,6 +12,20 @@ from app.database import Base
 
 
 class SensorKey(Base):
+    """
+
+    Model that stores hash for key of sensor
+
+    Args:
+
+       (id): Identification field
+       (sensor_id): Foreign Key on Sensor model
+       (group_id): Foreign Key on Group model
+       (key_hash): Hash of the Key
+       (created_at): Timestamp of creation current sensor`s key
+
+    """
+
     __tablename__ = "sensor_keys"
 
     id = Column(Integer, primary_key=True)

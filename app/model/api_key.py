@@ -13,6 +13,21 @@ from app.database import Base
 
 
 class APIKey(Base):
+    """
+    Model that describes API key
+
+    Args:
+
+        (id): Identification field
+        (group_id): Foreign key on Group model
+        (name): Name of current API key
+        #TODO sensor_role
+        #TODO group_role
+        (key_hash): Hash of api key
+        (created_at): Timestamp for current API key
+
+    """
+
     __tablename__ = "api_keys"
 
     id = Column(Integer, primary_key=True, nullable=False, unique=True)
