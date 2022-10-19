@@ -46,21 +46,18 @@ def login(
 
 @auth_router.post("/google_login", response_model=schema.Token)
 def google_login(user_data: schema.UserGoogleLogin, db: Session = Depends(get_db),):
-    user = schema.UserCreate(
-        username=user_data.username,
-        email=user_data.email,
-        password=user_data.google_openid_key,
-        google_openid_key=user_data.google_openid_key,
-    )
-    user = model.User(**user.dict())
-    db.add(user)
-    try:
+    user = db.query(model.User).filter_by(email=user_data.email).first()
+    if not user:
+        user = schema.UserCreate(
+            username=user_data.username,
+            email=user_data.email,
+            password=user_data.google_openid_key,
+            google_openid_key=user_data.google_openid_key,
+        )
+        user = model.User(**user.dict())
+        db.add(user)
         db.commit()
-    except IntegrityError:
-        db.rollback()
-        if db.query(model.User).filter_by(email=user.email).first():
-            db.refresh(user)
+        db.refresh(user)
 
     access_token = create_access_token(data={"user_id": user.id})
-
     return {"access_token": access_token, "token_type": "bearer"}
