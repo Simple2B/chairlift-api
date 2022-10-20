@@ -18,5 +18,4 @@ class Role(enum.Enum):
 
     Admin = "Admin"
     Owner = "Owner"
-    Client = "Client"
-    NoneRole = "None"
+    User = "User"

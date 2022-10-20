@@ -1,9 +1,12 @@
+from http import HTTPStatus
+
 from fastapi import HTTPException, Depends, APIRouter
-from app import model, schema, oauth2
-from app.database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from http import HTTPStatus
+
+from app import model, schema, oauth2
+from app.database import get_db
+
 
 from app.logger import log
 
@@ -12,7 +15,7 @@ router = APIRouter(prefix="/user", tags=["Users"])
 
 @router.post("/", status_code=201, response_model=schema.UserOut)
 def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
-    """Creates a new user instance
+    """Creates a new user instance and sends him
 
     Args:
         user (schema.UserCreate): Gets user's data
@@ -31,15 +34,6 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError as e:
         db.rollback()
-        if db.query(model.User).filter_by(username=user.username).first():
-            log(
-                log.ERROR,
-                "User with such username [%s] - exists",
-                user.username,
-            )
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT, detail="Username already exists"
-            )
 
         if db.query(model.User).filter_by(email=user.email).first():
             log(
@@ -85,3 +79,26 @@ def get_user(
         raise HTTPException(status_code=404, detail="This user was not found")
 
     return user
+
+
+@router.get("/reset_password", status_code=HTTPStatus.OK)
+def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)):
+    user: model.User = (
+        db.query(model.User)
+        .filter_by(verification_token=data.verification_token)
+        .first()
+    )
+    if not user:
+        log(
+            log.WARNING,
+            "User does not exist or token expired - [%s]",
+            data.verification_token,
+        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+
+    user.password = data.password
+    user.verification_token = None
+    user.is_verified = True
+    db.commit()
+
+    return {"message": "Password has been updated"}

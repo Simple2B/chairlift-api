@@ -10,3 +10,6 @@ from .role import Role
 from .sensor import Sensor
 from .sensor_key import SensorKey
 from app.database import Base
+from .user_group import UserGroup
+
+# TODO make stripe payment table

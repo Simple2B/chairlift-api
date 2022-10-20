@@ -36,8 +36,8 @@ class APIKey(Base):
 
     name = Column(String(256), nullable=False)
 
-    sensor_role = Column(Enum(Role), default=Role.NoneRole)
-    group_role = Column(Enum(Role), default=Role.NoneRole)
+    sensor_role = Column(Enum(Role), default=Role.Admin)
+    group_role = Column(Enum(Role), default=Role.Admin)
 
     key_hash = Column(String(256))
 

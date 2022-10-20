@@ -37,7 +37,6 @@ def test_model_relations(db: Session, test_data: dict):
 
     db.refresh(user_model)
 
-    # TODO add many to many user_group check
     assert len(user_model.own_groups) == len(test_data["test_groups"])
 
 
@@ -62,17 +61,23 @@ def test_auth(client: TestClient, db: Session):
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json()["detail"] == "Email already exists"
 
-    # check if username already exists
-    data.username = USER_NAME
-    data.email += "abc"
-    response = client.post("/api/user/", json=data.dict())
-    assert response.status_code == HTTPStatus.CONFLICT
-    assert response.json()["detail"] == "Username already exists"
+    # Check if current user is not verified
+    response = client.post(
+        "/api/login", data=dict(username=USER_NAME, password=USER_PASSWORD)
+    )
+    assert response.status_code == 406
+
+    # making user verified
+    user = db.query(model.User).get(new_user.id)
+    user.is_verified = True
+    db.commit()
+
     # login by username and password
     response = client.post(
         "/api/login", data=dict(username=USER_NAME, password=USER_PASSWORD)
     )
     assert response and response.ok, "unexpected response"
+
     token = schema.Token.parse_obj(response.json())
     headers = {"Authorization": f"Bearer {token.access_token}"}
 
@@ -83,16 +88,29 @@ def test_auth(client: TestClient, db: Session):
     assert user.username == USER_NAME
 
 
-def test_google_auth(client: TestClient, db: Session):
-    request = schema.UserGoogleLogin(
-        email=USER_EMAIL,
+def test_reset_password(client: TestClient, db: Session):
+    data_user = schema.UserCreate(
         username=USER_NAME,
-        google_openid_key=USER_GOOGLE_ID,
+        email=USER_EMAIL,
+        password=USER_PASSWORD,
     )
 
-    response = client.post("/api/google_login", json=request.dict())
-    assert response and response.ok, "unexpected response"
+    response = client.post("api/user/", json=data_user.dict())
+    assert response.ok
 
-    token = schema.Token.parse_obj(response.json())
-    headers = {"Authorization": f"Bearer {token.access_token}"}
-    assert headers
+    user = db.query(model.User).filter_by(email=USER_EMAIL).first()
+
+    assert user
+    assert not user.is_verified
+
+    data_reset_password = schema.ResetPasswordData(
+        password=USER_PASSWORD, verification_token=user.verification_token
+    )
+    response = client.get("api/user/reset_password", json=data_reset_password.dict())
+    # TODO 401 unaothirzed
+    assert response.ok
+
+    user = db.query(model.User).filter_by(email=USER_EMAIL).first()
+
+    assert not user.verification_token
+    assert user.is_verified

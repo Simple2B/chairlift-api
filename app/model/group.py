@@ -44,20 +44,6 @@ class Group(Base):
     sensors = relationship("Sensor", secondary="sensor_groups", backref="sensors")
 
 
-class UserGroup(Base):
-    __tablename__ = "user_groups"
-
-    id = Column(Integer, primary_key=True)
-
-    user_id = Column(Integer, ForeignKey("users.id"))
-    group_id = Column(Integer, ForeignKey("groups.id"))
-
-    sensor_role = Column(Enum(Role), default=Role.NoneRole)
-    group_role = Column(Enum(Role), default=Role.NoneRole)
-
-    joined_at = Column(DateTime(), default=datetime.now)
-
-
 class SensorGroup(Base):
     __tablename__ = "sensor_groups"
 
@@ -66,8 +52,9 @@ class SensorGroup(Base):
     sensor_id = Column(Integer, ForeignKey("sensors.id"))
     group_id = Column(Integer, ForeignKey("groups.id"))
 
-    edit_roles = Column(Enum(Role), default=Role.NoneRole)
-    view_roles = Column(Enum(Role), default=Role.NoneRole)
-    share_roles = Column(Enum(Role), default=Role.NoneRole)
+    # TODO to know
+    edit_roles = Column(Enum(Role), default=Role.User)
+    view_roles = Column(Enum(Role), default=Role.User)
+    share_roles = Column(Enum(Role), default=Role.User)
 
     joined_at = Column(DateTime(), default=datetime.now)

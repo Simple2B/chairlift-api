@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 
 from sqlalchemy import (
     Column,
@@ -14,6 +15,10 @@ from sqlalchemy import (
 from app.hash_utils import make_hash, hash_verify
 from app.database import Base, SessionLocal
 from .role import Role
+
+
+def gen_uid():
+    return str(uuid.uuid4())
 
 
 class User(Base):
@@ -39,18 +44,20 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
 
-    username = Column(String(64), nullable=False, unique=True, index=True)
+    username = Column(String(64), nullable=False, index=True)
     email = Column(String(128), nullable=False, unique=True, index=True)
     password_hash = Column(String(256), nullable=False)
 
     picture = Column(String(256), nullable=True)
-    verified = Column(Boolean, default=False)
+
+    is_verified = Column(Boolean, default=False)
+    verification_token = Column(String(128), nullable=True, default=gen_uid)
 
     is_deleted = Column(Boolean(), default=False)
 
     created_at = Column(DateTime(), default=datetime.now)
 
-    role = Column(Enum(Role), default=Role.NoneRole)
+    role = Column(Enum(Role), default=Role.Admin)
 
     google_openid_key = Column(String(256), nullable=True)
     apple_openid_key = Column(String(256), nullable=True)
