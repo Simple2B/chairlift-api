@@ -81,7 +81,7 @@ def get_user(
     return user
 
 
-@router.get("/reset_password", status_code=HTTPStatus.OK)
+@router.post("/reset_password", status_code=HTTPStatus.OK)
 def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)):
     user: model.User = (
         db.query(model.User)

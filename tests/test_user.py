@@ -106,8 +106,8 @@ def test_reset_password(client: TestClient, db: Session):
     data_reset_password = schema.ResetPasswordData(
         password=USER_PASSWORD, verification_token=user.verification_token
     )
-    response = client.get("api/user/reset_password", json=data_reset_password.dict())
-    # TODO 401 unaothirzed
+    response = client.post("api/user/reset_password", json=data_reset_password.dict())
+
     assert response.ok
 
     user = db.query(model.User).filter_by(email=USER_EMAIL).first()
