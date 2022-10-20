@@ -9,6 +9,21 @@ from .role import Role
 
 
 class Group(Base):
+    """
+    Model for Group
+
+    Args:
+
+        (id): Identification field
+        (name): Name of the group
+        (group_owner): Foreign Key on owner of current group
+        (created_at): Date of group creation
+        (users): Gets all groups the user is in
+        (user_owner): Get all groups owned by (relates to the user)
+        (sensors): Gets all sensors assigned to this group
+
+    """
+
     __tablename__ = "groups"
 
     id = Column(Integer, primary_key=True)

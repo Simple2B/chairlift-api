@@ -5,7 +5,8 @@ from app import schema
 from app.database import get_db
 from app import model
 from app.oauth2 import create_access_token
-# from app.logger import log
+
+from app.logger import log
 
 
 auth_router = APIRouter(tags=["Authentication"])
@@ -16,17 +17,18 @@ def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """_summary_
+    """
+    Route that logins user and returns him a token
 
     Args:
-        user_credentials (OAuth2PasswordRequestForm, optional): _description_. Defaults to Depends().
-        db (Session, optional): _description_. Defaults to Depends(get_db).
+        user_credentials (OAuth2PasswordRequestForm, optional): Credentials of a user
+        db (Session, optional): Database sesion
 
     Raises:
-        HTTPException: _description_
+        HTTPException: 403 - Invalid Credentials
 
     Returns:
-        _type_: _description_
+        json: Token for the new user and token type
     """
     user: model.User = model.User.authenticate(
         db,
@@ -35,17 +37,37 @@ def login(
     )
 
     if not user:
+        log(log.INFO, "User [%s] does not exist \n", user_credentials.username)
         raise HTTPException(status_code=403, detail="Invalid credentials")
 
     access_token = create_access_token(data={"user_id": user.id})
-
+    log(log.INFO, "Token for user [%s] has been generated", user.email)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @auth_router.post("/google_login", response_model=schema.Token)
-def google_login(user_data: schema.UserGoogleLogin, db: Session = Depends(get_db),):
+def google_login(
+    user_data: schema.UserGoogleLogin,
+    db: Session = Depends(get_db),
+):
+    """
+    Route that logins user via the Google OAuth and returns him a token
+
+    Args:
+        user_data (OAuth2PasswordRequestForm, optional): Credentials of a user that google provides
+        db (Session, optional): Database sesion
+
+    Returns:
+        json: Token for the new usesr and token type
+
+    """
     user = db.query(model.User).filter_by(email=user_data.email).first()
     if not user:
+        log(
+            log.INFO,
+            "User does not exist \n Creating user [%s] using Google OAuth",
+            user_data.email,
+        )
         user = schema.UserCreate(
             username=user_data.username,
             email=user_data.email,
@@ -56,6 +78,8 @@ def google_login(user_data: schema.UserGoogleLogin, db: Session = Depends(get_db
         db.add(user)
         db.commit()
         db.refresh(user)
-
     access_token = create_access_token(data={"user_id": user.id})
+
+    log(log.INFO, "Token for user [%s] has been generated", user_data.email)
+
     return {"access_token": access_token, "token_type": "bearer"}

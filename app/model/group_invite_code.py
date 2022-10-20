@@ -14,6 +14,21 @@ from app.database import Base
 
 
 class GroupInviteCode(Base):
+    """Model for Inviting Code that related to group
+
+    Args:
+
+       (id): Identification field
+       (group_id): Foreign Key on Group
+       (invite_code): Invite code for current group
+       (expiration_date): Date of code expiration
+       (invitation_date): Date of invitation
+       (group_role): Foreign Key on Group model
+       (sensor_role): Foreign Key on Sensor model
+       (email): Foreign Key on user's email
+
+    """
+
     __tablename__ = "group_invite_codes"
 
     id = Column(Integer, primary_key=True, nullable=False, unique=True)

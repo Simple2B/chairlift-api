@@ -13,6 +13,21 @@ from app.database import Base
 
 
 class Firmware(Base):
+    """
+    Model for firware data
+
+    Args:
+
+        (id): Identification field
+        (model): Firmware model name
+        (hardware): Hadware
+        (hash): Hash
+        (date): Timestamp of firmware creation
+        (data): Data
+        (bin): Bin
+
+    """
+
     __tablename__ = "firmwares"
 
     id = Column(Integer, primary_key=True, nullable=False, unique=True)

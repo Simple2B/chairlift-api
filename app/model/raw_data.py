@@ -13,6 +13,20 @@ from app.database import Base
 
 
 class RawData(Base):
+    """
+    Model for the data that the sensor contains
+
+    Args:
+
+        (id): Identification field
+        (upload_id):Upload id
+        (sensor_id): Foreign Key on Sensor model
+        (blob): blob
+        (added_at): Timestamp of current model creation
+        (parsed): Check if a file has been parsed
+
+    """
+
     __tablename__ = "raw_datas"
 
     id = Column(Integer, primary_key=True, nullable=False, unique=True)
