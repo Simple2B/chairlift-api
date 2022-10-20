@@ -8,7 +8,7 @@ from app import model, schema
 USER_NAME = "michael"
 USER_EMAIL = "test@test.ku"
 USER_PASSWORD = "secret"
-USER_GOOGLE_ID = '123456789'
+USER_GOOGLE_ID = "123456789"
 
 
 def test_model_relations(db: Session, test_data: dict):
@@ -84,9 +84,11 @@ def test_auth(client: TestClient, db: Session):
 
 
 def test_google_auth(client: TestClient, db: Session):
-    request = schema.UserGoogleLogin(email=USER_EMAIL,
-                                     username=USER_NAME,
-                                     google_openid_key=USER_GOOGLE_ID,)
+    request = schema.UserGoogleLogin(
+        email=USER_EMAIL,
+        username=USER_NAME,
+        google_openid_key=USER_GOOGLE_ID,
+    )
 
     response = client.post("/api/google_login", json=request.dict())
     assert response and response.ok, "unexpected response"

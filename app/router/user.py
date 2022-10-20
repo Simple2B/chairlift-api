@@ -20,7 +20,6 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
 
     Raises:
         HTTPException: 409 Conflict
-        HTTPException: 409 Conflict
 
     Returns:
         _type_: A new user instance
@@ -30,7 +29,7 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
         if db.query(model.User).filter_by(username=user.username).first():
             log(
@@ -52,12 +51,13 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
                 status_code=HTTPStatus.CONFLICT, detail="Email already exists"
             )
 
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Database commit error: {e}",
+        )
+
     db.refresh(new_user)
-    log(
-        log.INFO,
-        "User [%s] - created",
-        user.email,
-    )
+    log(log.INFO, "User [%s] - created", user.email)
     return new_user
 
 

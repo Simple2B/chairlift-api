@@ -1,5 +1,7 @@
 import enum
 
+# TODO PERMISSIONS AND ROLES
+
 
 class Role(enum.Enum):
     """
