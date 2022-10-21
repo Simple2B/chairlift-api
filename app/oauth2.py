@@ -40,14 +40,17 @@ def verify_access_token(token: str, credentials_exception):
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-):
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> User:
     credentials_exception = HTTPException(
         status_code=404,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    token = verify_access_token(token, credentials_exception)
-    user = db.query(User).filter_by(id=token.id).first()
+    token_data: TokenData = verify_access_token(token, credentials_exception)
+    user = db.query(User).filter_by(id=token_data.id).first()
+    if not user:
+        raise credentials_exception
 
     return user

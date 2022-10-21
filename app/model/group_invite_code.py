@@ -14,7 +14,8 @@ from app.database import Base
 
 
 class GroupInviteCode(Base):
-    """Model for Inviting Code that related to group
+    """
+    Model for Inviting Code that related to group
 
     Args:
 
@@ -40,8 +41,8 @@ class GroupInviteCode(Base):
     expiration_date = Column(DateTime(), default=datetime.now)
     invitation_date = Column(DateTime(), default=datetime.now)
 
-    group_role = Column(Enum(Role), default=Role.NoneRole, nullable=False)
-    sensor_role = Column(Enum(Role), default=Role.NoneRole, nullable=False)
+    group_role = Column(Enum(Role), default=Role.User, nullable=False)
+    sensor_role = Column(Enum(Role), default=Role.User, nullable=False)
 
     email = Column(String(128), nullable=False)
 

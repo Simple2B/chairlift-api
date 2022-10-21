@@ -1,5 +1,7 @@
 import enum
 
+# TODO PERMISSIONS AND ROLES
+
 
 class Role(enum.Enum):
     """
@@ -10,11 +12,9 @@ class Role(enum.Enum):
         (Admin): Admin Role
         (Owner): Owner Role
         (Client): Client Role
-        (NoneRole): Role for uknown user
 
     """
 
     Admin = "Admin"
     Owner = "Owner"
-    Client = "Client"
-    NoneRole = "None"
+    User = "User"
