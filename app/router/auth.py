@@ -125,6 +125,7 @@ async def sign_up(
 
     db.refresh(user)
 
+    # TODO FIX EMAIL SEND
     try:
         await send_email(
             user.email,
