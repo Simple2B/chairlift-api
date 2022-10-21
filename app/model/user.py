@@ -8,7 +8,6 @@ from sqlalchemy import (
     String,
     DateTime,
     func,
-    or_,
     Enum,
 )
 
@@ -75,10 +74,7 @@ class User(Base):
         user = (
             db.query(cls)
             .filter(
-                or_(
-                    func.lower(cls.username) == func.lower(user_id),
-                    func.lower(cls.email) == func.lower(user_id),
-                )
+                func.lower(cls.email) == func.lower(user_id),
             )
             .first()
         )

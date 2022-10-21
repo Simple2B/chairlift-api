@@ -12,7 +12,6 @@ class Role(enum.Enum):
         (Admin): Admin Role
         (Owner): Owner Role
         (Client): Client Role
-        (NoneRole): Role for uknown user
 
     """
 
