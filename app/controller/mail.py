@@ -28,7 +28,16 @@ async def send_email(
     email: email.EmailSchema,
     verification_link: str,
 ) -> JSONResponse:
+    """
+    Function for generating email
 
+    Args:
+        email (email.EmailSchema): _description_
+        verification_link (str): _description_
+
+    Returns:
+        JSONResponse: _description_
+    """
     message = MessageSchema(
         subject="Account verification",
         recipients=[email],

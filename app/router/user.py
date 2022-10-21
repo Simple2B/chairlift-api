@@ -25,7 +25,7 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
         HTTPException: 409 Conflict
 
     Returns:
-        _type_: A new user instance
+        User: A new user instance
     """
 
     new_user = model.User(**user.dict())
@@ -71,7 +71,7 @@ def get_user(
         HTTPException: 404 - Not Found
 
     Returns:
-        user: User instance
+        User: User's instance
     """
     user = db.query(model.User).get(id)
 
@@ -83,6 +83,19 @@ def get_user(
 
 @router.post("/reset_password", status_code=HTTPStatus.OK)
 def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)):
+    """Gets user
+
+    Args:
+        id (int): ID of user
+        db (Session, optional):  Database sesion
+
+    Raises:
+        HTTPException: 404 - Not Found
+
+    Returns:
+        User: User's instance
+    """
+
     user: model.User = (
         db.query(model.User)
         .filter_by(verification_token=data.verification_token)
