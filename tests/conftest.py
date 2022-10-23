@@ -8,12 +8,16 @@ from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.database import Base, get_db
-from app.controller.mail import mail
+from app.config import settings as conf
 
 
 @pytest.fixture
 def client() -> Generator:
-    mail.config.SUPPRESS_SEND = 1
+    if not conf.TEST_SEND_EMAIL:
+        from app.controller.mail import mail
+
+        mail.config.SUPPRESS_SEND = 1
+
     with TestClient(app) as c:
         yield c
 

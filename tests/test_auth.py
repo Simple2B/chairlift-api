@@ -5,9 +5,10 @@ from sqlalchemy.orm import Session
 from app import schema
 from app import model
 from app.controller.mail import mail
+from app.config import settings as conf
 
 USER_NAME = "michael"
-USER_EMAIL = "test@test.ku"
+USER_EMAIL = conf.TEST_TARGET_EMAIL
 USER_PASSWORD = "secret"
 USER_GOOGLE_ID = "123456789"
 
