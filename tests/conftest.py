@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.database import Base, get_db
-from app.controller import mail
+from app.controller.mail import mail
 
 
 @pytest.fixture

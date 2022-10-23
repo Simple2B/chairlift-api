@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import schema
 from app import model
-from app.controller import mail
+from app.controller.mail import mail
 
 USER_NAME = "michael"
 USER_EMAIL = "test@test.ku"
