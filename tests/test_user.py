@@ -1,9 +1,6 @@
-from http import HTTPStatus
-
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app import model, schema
+from app import model
 
 USER_NAME = "michael"
 USER_EMAIL = "test@test.ku"
