@@ -31,10 +31,9 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
       - name: Install dependencies
         run: |
-          cd fast_api && poetry install
+          cd poetry install
       - name: Lint with flake8
         run: |
-          cd fast_api
           poetry run flake8 --count --show-source --statistics
           poetry run flake8 --count --exit-zero --max-complexity=10 --statistics
       - name: run pytest
