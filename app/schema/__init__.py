@@ -5,3 +5,4 @@ from .user_out import UserOut
 from .user_login import UserLogin, UserGoogleLogin
 from .token import Token, TokenData
 from .reset_password import ResetPasswordData
+from .email import EmailSchema

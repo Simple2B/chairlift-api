@@ -11,7 +11,7 @@ from app.database import get_db
 from app import model as m
 from app.oauth2 import create_access_token
 from app.logger import log
-from app.controller import send_email
+
 
 auth_router = APIRouter(tags=["Authentication"])
 
@@ -100,45 +100,26 @@ def google_login(
 async def sign_up(
     user_data: s.UserSignUp, request: Request, db: Session = Depends(get_db)
 ):
+    from smtplib import SMTPException
+    from app.controller import send_email
+
     user = m.User(password="*", **user_data.dict())
-    db.add(user)
+    user.verify_new_user(db)
 
-    try:
-        db.commit()
-    except IntegrityError as e:
-        db.rollback()
-
-        if db.query(m.User).filter_by(email=user.email).first():
-            log(
-                log.ERROR,
-                "User with such email [%s] - exists",
-                user.email,
-            )
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT, detail="Email already exists"
-            )
-
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=f"Database commit error: {e}",
-        )
-
-    db.refresh(user)
-
-    # TODO FIX EMAIL SEND
     try:
         await send_email(
             user.email,
             user.username,
             urllib.parse.urljoin(
-                request.url_for("reset_password") + "/", user.verification_token
+                request.url_for("reset_password"), user.verification_token
             ),
         )
-    except HTTPException:
-        db.query(m.User).filter_by(email=user.email).first().delete()
-        db.commit()
+    except SMTPException as e:
         raise HTTPException(
-            status_code=HTTPStatus.CONFLICT,
-            detail={"message": "Errow occured while sending email"},
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Error send e-mail: {e}",
         )
+
+    db.add(user)
+    db.commit()
     return HTTPStatus.OK

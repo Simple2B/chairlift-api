@@ -1,8 +1,9 @@
+from pytest import MonkeyPatch
 from http import HTTPStatus
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app import schema
+from app import schema as s
 from app import model
 from app.controller.mail import mail
 from app.config import settings as conf
@@ -14,7 +15,7 @@ USER_GOOGLE_ID = "123456789"
 
 
 def test_google_auth(client: TestClient, db: Session):
-    request = schema.UserGoogleLogin(
+    request = s.UserGoogleLogin(
         email=USER_EMAIL,
         username=USER_NAME,
         google_openid_key=USER_GOOGLE_ID,
@@ -27,7 +28,7 @@ def test_google_auth(client: TestClient, db: Session):
     assert response and response.ok, "unexpected response"
 
     # Checking if token exists
-    token = schema.Token.parse_obj(response.json())
+    token = s.Token.parse_obj(response.json())
     assert token.access_token
 
     user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
@@ -35,7 +36,7 @@ def test_google_auth(client: TestClient, db: Session):
     assert response and response.ok, "unexpected response"
 
     # Checking for existing of token
-    token = schema.Token.parse_obj(response.json())
+    token = s.Token.parse_obj(response.json())
     assert token.access_token
 
     # Checking if user's google open id key stays the same
@@ -43,9 +44,9 @@ def test_google_auth(client: TestClient, db: Session):
     assert user.google_openid_key == USER_GOOGLE_ID
 
 
-def test_sign_up_and_email_password_reset(client: TestClient, db: Session):
+def test_signup_and_email_password_reset(client: TestClient, db: Session):
     # Mocking email sending
-    request_data = schema.UserSignUp(email=USER_EMAIL, username=USER_NAME)
+    request_data = s.UserSignUp(email=USER_EMAIL, username=USER_NAME)
 
     # Testing email
     with mail.record_messages() as outbox:
@@ -65,6 +66,34 @@ def test_sign_up_and_email_password_reset(client: TestClient, db: Session):
     assert response.status_code == HTTPStatus.CONFLICT
 
 
+def test_signup_and_fail_send_email(
+    client: TestClient, db: Session, monkeypatch: MonkeyPatch
+):
+    from app import controller
+
+    def mock_send_email(
+        email: s.EmailSchema,
+        username: str,
+        verification_link: str,
+    ):
+        from smtplib import SMTPAuthenticationError
+
+        assert email
+        assert username
+        assert verification_link
+
+        raise SMTPAuthenticationError(code=56, msg="Test ERROR")
+
+    monkeypatch.setattr(controller, "send_email", mock_send_email)
+    response = client.post(
+        "/api/sign_up",
+        json=s.UserSignUp(email=USER_EMAIL, username=USER_NAME).dict(),
+    )
+
+    assert not response
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_reset_password(client: TestClient, db: Session):
     # create new user
     user = model.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
@@ -74,7 +103,7 @@ def test_reset_password(client: TestClient, db: Session):
     db.refresh(user)
     assert not user.is_verified
 
-    data_reset_password = schema.ResetPasswordData(
+    data_reset_password = s.ResetPasswordData(
         password=USER_PASSWORD, verification_token=user.verification_token
     )
     response = client.post("api/user/reset_password", json=data_reset_password.dict())
@@ -111,11 +140,11 @@ def test_login(client: TestClient, db: Session):
     )
     assert response and response.ok, "unexpected response"
 
-    token = schema.Token.parse_obj(response.json())
+    token = s.Token.parse_obj(response.json())
     headers = {"Authorization": f"Bearer {token.access_token}"}
 
     # get user by id
     response = client.get(f"/api/user/{user.id}", headers=headers)
     assert response and response.ok
-    user = schema.UserOut.parse_obj(response.json())
+    user = s.UserOut.parse_obj(response.json())
     assert user.username == USER_NAME

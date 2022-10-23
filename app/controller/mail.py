@@ -3,7 +3,7 @@ from pathlib import Path
 from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-from app.schema import email
+from app import schema as s
 from app.config import settings
 
 mail = FastMail(
@@ -24,7 +24,7 @@ mail = FastMail(
 
 
 async def send_email(
-    email: email.EmailSchema,
+    email: s.EmailSchema,
     username: str,
     verification_link: str,
 ) -> JSONResponse:
