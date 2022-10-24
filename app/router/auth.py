@@ -1,5 +1,6 @@
 from http import HTTPStatus
 import urllib
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
@@ -99,7 +100,7 @@ def google_login(
 async def sign_up(
     user_data: s.UserSignUp, request: Request, db: Session = Depends(get_db)
 ):
-    """ Signining up a new user
+    """Signining up a new user
 
     Args:
         user_data (s.UserSignUp): Gets email and username
@@ -118,12 +119,14 @@ async def sign_up(
     user = m.User(password="*", **user_data.dict())
     user.verify_new_user(db)
 
+    verification_token = str(uuid.uuid4())
+
     try:
         await send_email(
             user.email,
             user.username,
             urllib.parse.urljoin(
-                request.url_for("reset_password"), user.verification_token
+                request.url_for("reset_password") + "/", verification_token
             ),
         )
     except SMTPException as e:
@@ -131,7 +134,7 @@ async def sign_up(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=f"Error send e-mail: {e}",
         )
-
+    user.verification_token = verification_token
     db.add(user)
     db.commit()
     return HTTPStatus.OK
