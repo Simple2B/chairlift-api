@@ -12,7 +12,7 @@ from app.database import get_db
 from app import model as m
 from app.oauth2 import create_access_token
 from app.logger import log
-
+from app.config import settings
 
 auth_router = APIRouter(tags=["Authentication"])
 
@@ -135,7 +135,7 @@ async def sign_up(
         }
         req = PreparedRequest()
         req.prepare_url(
-            f'{request.url_for("reset_password")}/',
+            f"{settings.FRONTEND_BASE_URL}/reset_password/",
             urllib.parse.urlencode(params),
         )
 

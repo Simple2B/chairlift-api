@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     TEST_SEND_EMAIL: bool = False
     TEST_TARGET_EMAIL: str = "test@test.com"
 
+    FRONTEND_BASE_URL: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
 
