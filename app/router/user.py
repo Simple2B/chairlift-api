@@ -10,9 +10,6 @@ from app.controller import send_email
 from app import model, schema, oauth2
 from app.database import get_db
 
-
-from app.logger import log
-
 router = APIRouter(prefix="/user", tags=["Users"])
 
 
