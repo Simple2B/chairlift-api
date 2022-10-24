@@ -13,7 +13,6 @@ from sqlalchemy import (
 
 from app.hash_utils import make_hash, hash_verify
 from app.database import Base, SessionLocal
-from app.logger import log
 from .role import Role
 
 
@@ -81,35 +80,6 @@ class User(Base):
         )
         if user is not None and hash_verify(password, user.password):
             return user
-
-    def verify_new_user(self, db: SessionLocal):
-        """ Verifying if created user already exists in DB
-
-        Args:
-            db (SessionLocal): _description_
-
-        Raises:
-            HTTPException: 409 - User with such email already exists
-        """
-        from http import HTTPStatus
-        from fastapi import HTTPException
-
-        user = (
-            db.query(User)
-            .filter(
-                func.lower(User.email) == func.lower(self.email),
-            )
-            .first()
-        )
-        if user:
-            log(
-                log.ERROR,
-                "User with such email [%s] - exists",
-                user.email,
-            )
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT, detail="Email already exists"
-            )
 
     def __repr__(self):
         return f"<{self.id}: {self.username}>"

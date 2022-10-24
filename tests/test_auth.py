@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app import schema as s
-from app import model
+from app import model as m
 from app.controller.mail import mail
 from app.config import settings as conf
 
@@ -21,7 +21,7 @@ def test_google_auth(client: TestClient, db: Session):
         google_openid_key=USER_GOOGLE_ID,
     )
 
-    user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
     # Checking if user logged in via google succesfully
     response = client.post("/api/google_login", json=request.dict())
@@ -31,7 +31,7 @@ def test_google_auth(client: TestClient, db: Session):
     token = s.Token.parse_obj(response.json())
     assert token.access_token
 
-    user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
     response = client.post("/api/google_login", json=request.dict())
     assert response and response.ok, "unexpected response"
 
@@ -40,7 +40,7 @@ def test_google_auth(client: TestClient, db: Session):
     assert token.access_token
 
     # Checking if user's google open id key stays the same
-    user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
     assert user.google_openid_key == USER_GOOGLE_ID
 
 
@@ -55,7 +55,7 @@ def test_signup_and_email_password_reset(client: TestClient, db: Session):
         assert len(outbox) == 1
 
     # Testing if user exists
-    user = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
     assert not user.is_verified
     assert user.verification_token
@@ -92,11 +92,12 @@ def test_signup_and_fail_send_email(
 
     assert not response
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert not db.query(m.User).count()
 
 
 def test_reset_password(client: TestClient, db: Session):
     # create new user
-    user = model.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+    user = m.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
 
     db.add(user)
     db.commit()
@@ -110,7 +111,7 @@ def test_reset_password(client: TestClient, db: Session):
 
     assert response.ok
 
-    user = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
     assert not user.verification_token
     assert user.is_verified
@@ -118,7 +119,7 @@ def test_reset_password(client: TestClient, db: Session):
 
 def test_login(client: TestClient, db: Session):
     # create new user
-    user = model.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+    user = m.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -130,7 +131,7 @@ def test_login(client: TestClient, db: Session):
     assert response.status_code == HTTPStatus.NOT_ACCEPTABLE
 
     # making user verified
-    user = db.query(model.User).get(user.id)
+    user = db.query(m.User).get(user.id)
     user.is_verified = True
     db.commit()
 
