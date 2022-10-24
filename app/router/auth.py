@@ -4,7 +4,6 @@ import urllib
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from app import schema as s
 from app.database import get_db
