@@ -105,7 +105,12 @@ def google_login(
     access_token = create_access_token(data={"user_id": user.id})
     log(log.INFO, "Token for user [%s] has been generated", user_data.email)
 
-    user_data = {
+    user.picture = user_data.picture
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    user = {
         "username": user.username,
         "email": user.email,
         "picture": user.picture,
@@ -117,7 +122,7 @@ def google_login(
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": user_data,
+        "user": user,
     }
 
 
