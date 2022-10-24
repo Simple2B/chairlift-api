@@ -73,7 +73,7 @@ def test_signup_and_fail_send_email(
     from app import controller
 
     def mock_send_email(
-        email: s.EmailSchema,
+        email: s.EmailListSchema,
         username: str,
         verification_link: str,
     ):

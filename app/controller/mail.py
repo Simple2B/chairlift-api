@@ -24,7 +24,7 @@ mail = FastMail(
 
 
 async def send_email(
-    email: s.EmailSchema,
+    email: s.EmailListSchema,
     username: str,
     verification_link: str,
 ) -> JSONResponse:
@@ -32,7 +32,7 @@ async def send_email(
     Function for generating email
 
     Args:
-        email (email.EmailSchema): email string
+        email (email.EmailListSchema): email string
         verification_link (str): link that will be integrated in email
 
     Returns:
