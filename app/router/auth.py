@@ -1,10 +1,8 @@
 from http import HTTPStatus
-import urllib
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from requests.models import PreparedRequest
 from sqlalchemy.exc import IntegrityError
 
 from app import schema as s
@@ -130,19 +128,10 @@ async def sign_up(
     db.refresh(user)
 
     try:
-        params = {
-            "uuid": user.verification_token,
-        }
-        req = PreparedRequest()
-        req.prepare_url(
-            f"{settings.FRONTEND_BASE_URL}/reset_password/",
-            urllib.parse.urlencode(params),
-        )
-
         await send_email(
             user.email,
             user.username,
-            req.url,
+            f"{settings.FRONTEND_BASE_URL}/reset_password/{user.verification_token}",
         )
     except SMTPException as e:
         db.delete(user)
