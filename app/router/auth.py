@@ -53,7 +53,20 @@ def login(
 
     access_token = create_access_token(data={"user_id": user.id})
     log(log.INFO, "Token for user [%s] has been generated", user.email)
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    user_data = {
+        "username": user.username,
+        "email": user.email,
+        "picture": user.picture,
+        "is_deleted": user.is_deleted,
+        "created_at": user.created_at,
+        "role": user.role,
+    }
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_data,
+    }
 
 
 @auth_router.post("/google_login", response_model=s.Token)
@@ -84,15 +97,28 @@ def google_login(
             email=user_data.email,
             password=user_data.google_openid_key,
             google_openid_key=user_data.google_openid_key,
+            picture=user_data.picture,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
     access_token = create_access_token(data={"user_id": user.id})
-
     log(log.INFO, "Token for user [%s] has been generated", user_data.email)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    user_data = {
+        "username": user.username,
+        "email": user.email,
+        "picture": user.picture,
+        "is_deleted": user.is_deleted,
+        "created_at": user.created_at,
+        "role": user.role,
+    }
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_data,
+    }
 
 
 @auth_router.post("/sign_up", status_code=HTTPStatus.OK)

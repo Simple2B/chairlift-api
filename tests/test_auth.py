@@ -12,6 +12,7 @@ USER_NAME = "michael"
 USER_EMAIL = conf.TEST_TARGET_EMAIL
 USER_PASSWORD = "secret"
 USER_GOOGLE_ID = "123456789"
+USER_PICTURE_URL = "uploads/image.png"
 
 
 def test_google_auth(client: TestClient, db: Session):
@@ -19,10 +20,10 @@ def test_google_auth(client: TestClient, db: Session):
         email=USER_EMAIL,
         username=USER_NAME,
         google_openid_key=USER_GOOGLE_ID,
+        picture=USER_PICTURE_URL,
     )
 
     user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
-
     # Checking if user logged in via google succesfully
     response = client.post("/api/google_login", json=request.dict())
     assert response and response.ok, "unexpected response"
@@ -119,7 +120,12 @@ def test_reset_password(client: TestClient, db: Session):
 
 def test_login(client: TestClient, db: Session):
     # create new user
-    user = m.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+    user = m.User(
+        username=USER_NAME,
+        email=USER_EMAIL,
+        password=USER_PASSWORD,
+        picture=USER_PICTURE_URL,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -141,11 +147,7 @@ def test_login(client: TestClient, db: Session):
     )
     assert response and response.ok, "unexpected response"
 
-    token = s.Token.parse_obj(response.json())
-    headers = {"Authorization": f"Bearer {token.access_token}"}
-
     # get user by id
-    response = client.get(f"/api/user/{user.id}", headers=headers)
-    assert response and response.ok
-    user = s.UserOut.parse_obj(response.json())
+    user = db.query(m.User).filter_by(username=USER_NAME, email=USER_EMAIL).first()
     assert user.username == USER_NAME
+    assert user.email == USER_EMAIL

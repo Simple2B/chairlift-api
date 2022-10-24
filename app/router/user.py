@@ -18,7 +18,7 @@ def get_user(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Gets user
+    """Gets user by
 
     Args:
         id (int): ID of user
