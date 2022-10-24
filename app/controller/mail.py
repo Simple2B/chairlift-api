@@ -32,11 +32,11 @@ async def send_email(
     Function for generating email
 
     Args:
-        email (email.EmailSchema): _description_
-        verification_link (str): _description_
+        email (email.EmailSchema): email string
+        verification_link (str): link that will be integrated in email
 
     Returns:
-        JSONResponse: _description_
+        JSONResponse: Email has been spent
     """
     message = MessageSchema(
         subject="Account verification",

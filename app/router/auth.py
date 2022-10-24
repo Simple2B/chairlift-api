@@ -99,6 +99,19 @@ def google_login(
 async def sign_up(
     user_data: s.UserSignUp, request: Request, db: Session = Depends(get_db)
 ):
+    """ Signining up a new user
+
+    Args:
+        user_data (s.UserSignUp): Gets email and username
+        request (Request): request
+        db (Session, optional): Database sesion
+
+    Raises:
+        HTTPException: 422 - Error while sending email
+
+    Returns:
+        HTTP Status: 200 - OK
+    """
     from smtplib import SMTPException
     from app.controller import send_email
 

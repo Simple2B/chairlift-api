@@ -83,6 +83,14 @@ class User(Base):
             return user
 
     def verify_new_user(self, db: SessionLocal):
+        """ Verifying if created user already exists in DB
+
+        Args:
+            db (SessionLocal): _description_
+
+        Raises:
+            HTTPException: 409 - User with such email already exists
+        """
         from http import HTTPStatus
         from fastapi import HTTPException
 
