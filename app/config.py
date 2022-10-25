@@ -2,26 +2,29 @@ from pydantic import BaseSettings, EmailStr
 
 
 class Settings(BaseSettings):
-    JWT_SECRET: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    JWT_SECRET: str = "secret"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    DATABASE_URI: str
-    DEV_DATABASE_URI: str
-    DB_URI: str
+    DATABASE_URI: str = "sqlite:///./test.db"
+    DEV_DATABASE_URI: str = ""
 
-    ADMIN_USER: str
-    ADMIN_PASS: str
-    ADMIN_EMAIL: EmailStr
+    ADMIN_USER: str = "admin"
+    ADMIN_PASS: str = "admin"
+    ADMIN_EMAIL: EmailStr = "admin@unknown.li"
 
     # SMTP client
     MAIL_USERNAME: str = "!unknown!"
-    MAIL_PASSWORD: str
-    MAIL_FROM: EmailStr
-    MAIL_PORT: int
-    MAIL_SERVER: str
-    MAIL_FROM_NAME: str
+    MAIL_PASSWORD: str = ""
+    MAIL_FROM: EmailStr = "no@set.val"
+    MAIL_PORT: int = 0
+    MAIL_SERVER: str = ""
+    MAIL_FROM_NAME: str = ""
 
-    FRONTEND_RESET_PASSWORD_URL: str
+    # Testing
+    TEST_SEND_EMAIL: bool = False
+    TEST_TARGET_EMAIL: str = "test@test.com"
+
+    FRONTEND_BASE_URL: str = "http://localhost:3000"
 
     class Config:
         env_file = ".env"

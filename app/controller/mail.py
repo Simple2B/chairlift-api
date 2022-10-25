@@ -3,7 +3,7 @@ from pathlib import Path
 from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-from app.schema import email
+from app import schema as s
 from app.config import settings
 
 mail = FastMail(
@@ -14,17 +14,17 @@ mail = FastMail(
         MAIL_PORT=settings.MAIL_PORT,
         MAIL_SERVER=settings.MAIL_SERVER,
         MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
-        MAIL_STARTTLS=True,
-        MAIL_SSL_TLS=False,
+        MAIL_STARTTLS=False,
+        MAIL_SSL_TLS=True,
         USE_CREDENTIALS=True,
-        VALIDATE_CERTS=True,
+        VALIDATE_CERTS=False,
         TEMPLATE_FOLDER=Path("app/templates"),
     )
 )
 
 
 async def send_email(
-    email: email.EmailSchema,
+    email: s.EmailListSchema,
     username: str,
     verification_link: str,
 ) -> JSONResponse:
@@ -32,11 +32,11 @@ async def send_email(
     Function for generating email
 
     Args:
-        email (email.EmailSchema): _description_
-        verification_link (str): _description_
+        email (email.EmailListSchema): email string
+        verification_link (str): link that will be integrated in email
 
     Returns:
-        JSONResponse: _description_
+        JSONResponse: Email has been spent
     """
     message = MessageSchema(
         subject="Account verification",

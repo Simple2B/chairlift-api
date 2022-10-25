@@ -1,50 +1,53 @@
+from pytest import MonkeyPatch
 from http import HTTPStatus
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app import schema
-from app import model
-from app.controller import mail
+from app import schema as s
+from app import model as m
+from app.controller.mail import mail
+from app.config import settings as conf
 
 USER_NAME = "michael"
-USER_EMAIL = "test@test.ku"
+USER_EMAIL = conf.TEST_TARGET_EMAIL
 USER_PASSWORD = "secret"
 USER_GOOGLE_ID = "123456789"
+USER_PICTURE_URL = "uploads/image.png"
 
 
 def test_google_auth(client: TestClient, db: Session):
-    request = schema.UserGoogleLogin(
+    request = s.UserGoogleLogin(
         email=USER_EMAIL,
         username=USER_NAME,
         google_openid_key=USER_GOOGLE_ID,
+        picture=USER_PICTURE_URL,
     )
 
-    user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
-
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
     # Checking if user logged in via google succesfully
     response = client.post("/api/google_login", json=request.dict())
     assert response and response.ok, "unexpected response"
 
     # Checking if token exists
-    token = schema.Token.parse_obj(response.json())
+    token = s.Token.parse_obj(response.json())
     assert token.access_token
 
-    user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
     response = client.post("/api/google_login", json=request.dict())
     assert response and response.ok, "unexpected response"
 
     # Checking for existing of token
-    token = schema.Token.parse_obj(response.json())
+    token = s.Token.parse_obj(response.json())
     assert token.access_token
 
     # Checking if user's google open id key stays the same
-    user: model.User = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
     assert user.google_openid_key == USER_GOOGLE_ID
 
 
-def test_sign_up_and_email_password_reset(client: TestClient, db: Session):
+def test_signup_and_email_password_reset(client: TestClient, db: Session):
     # Mocking email sending
-    request_data = schema.UserSignUp(email=USER_EMAIL, username=USER_NAME)
+    request_data = s.UserSignUp(email=USER_EMAIL, username=USER_NAME)
 
     # Testing email
     with mail.record_messages() as outbox:
@@ -53,7 +56,7 @@ def test_sign_up_and_email_password_reset(client: TestClient, db: Session):
         assert len(outbox) == 1
 
     # Testing if user exists
-    user = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
     assert not user.is_verified
     assert user.verification_token
@@ -64,31 +67,65 @@ def test_sign_up_and_email_password_reset(client: TestClient, db: Session):
     assert response.status_code == HTTPStatus.CONFLICT
 
 
+def test_signup_and_fail_send_email(
+    client: TestClient, db: Session, monkeypatch: MonkeyPatch
+):
+    from app import controller
+
+    def mock_send_email(
+        email: s.EmailListSchema,
+        username: str,
+        verification_link: str,
+    ):
+        from smtplib import SMTPAuthenticationError
+
+        assert email
+        assert username
+        assert verification_link
+
+        raise SMTPAuthenticationError(code=56, msg="Test ERROR")
+
+    monkeypatch.setattr(controller, "send_email", mock_send_email)
+    response = client.post(
+        "/api/sign_up",
+        json=s.UserSignUp(email=USER_EMAIL, username=USER_NAME).dict(),
+    )
+
+    assert not response
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert not db.query(m.User).count()
+
+
 def test_reset_password(client: TestClient, db: Session):
     # create new user
-    user = model.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+    user = m.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
 
     db.add(user)
     db.commit()
     db.refresh(user)
     assert not user.is_verified
 
-    data_reset_password = schema.ResetPasswordData(
+    data_reset_password = s.ResetPasswordData(
         password=USER_PASSWORD, verification_token=user.verification_token
     )
     response = client.post("api/user/reset_password", json=data_reset_password.dict())
 
     assert response.ok
 
-    user = db.query(model.User).filter_by(email=USER_EMAIL).first()
+    user = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
-    assert not user.verification_token
+    assert user.verification_token
     assert user.is_verified
 
 
 def test_login(client: TestClient, db: Session):
     # create new user
-    user = model.User(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+    user = m.User(
+        username=USER_NAME,
+        email=USER_EMAIL,
+        password=USER_PASSWORD,
+        picture=USER_PICTURE_URL,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -100,7 +137,7 @@ def test_login(client: TestClient, db: Session):
     assert response.status_code == HTTPStatus.NOT_ACCEPTABLE
 
     # making user verified
-    user = db.query(model.User).get(user.id)
+    user = db.query(m.User).get(user.id)
     user.is_verified = True
     db.commit()
 
@@ -110,11 +147,7 @@ def test_login(client: TestClient, db: Session):
     )
     assert response and response.ok, "unexpected response"
 
-    token = schema.Token.parse_obj(response.json())
-    headers = {"Authorization": f"Bearer {token.access_token}"}
-
     # get user by id
-    response = client.get(f"/api/user/{user.id}", headers=headers)
-    assert response and response.ok
-    user = schema.UserOut.parse_obj(response.json())
+    user = db.query(m.User).filter_by(username=USER_NAME, email=USER_EMAIL).first()
     assert user.username == USER_NAME
+    assert user.email == USER_EMAIL

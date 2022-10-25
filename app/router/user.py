@@ -1,13 +1,14 @@
 from http import HTTPStatus
+from smtplib import SMTPException
 
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 
+from app.logger import log
+from app.config import settings
+from app.controller import send_email
 from app import model, schema, oauth2
 from app.database import get_db
-
-
-from app.logger import log
 
 router = APIRouter(prefix="/user", tags=["Users"])
 
@@ -18,7 +19,7 @@ def get_user(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Gets user
+    """Gets user by
 
     Args:
         id (int): ID of user
@@ -40,7 +41,7 @@ def get_user(
 
 @router.post("/reset_password", status_code=HTTPStatus.OK)
 def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)):
-    """Gets user
+    """Resetting user password
 
     Args:
         id (int): ID of user
@@ -67,8 +68,45 @@ def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
 
     user.password = data.password
-    user.verification_token = ""
+    user.verification_token = model.gen_uid()
     user.is_verified = True
     db.commit()
-
     return {"message": "Password has been updated"}
+
+
+@router.post("/forgot_password", status_code=HTTPStatus.OK)
+async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_db)):
+    """Route for the case when the user has been already registered
+    but forgot the password So email with the link for resetting the password will be sent
+
+    Args:
+        email (schema.EmailSchema): _description_
+        db (Session, optional): _description_. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: _description_
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    user: model.User = db.query(model.User).filter_by(email=email.email).first()
+    if not user:
+        log(
+            log.WARNING,
+            "User does not exist - [%s]",
+            email.email,
+        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+    try:
+        await send_email(
+            user.email,
+            user.username,
+            f"{settings.FRONTEND_BASE_URL}/reset_password/{user.verification_token}",
+        )
+    except SMTPException as e:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Error send e-mail: {e}",
+        )
+    return HTTPStatus.OK

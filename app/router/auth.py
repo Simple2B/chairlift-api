@@ -1,5 +1,4 @@
 from http import HTTPStatus
-import urllib
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
@@ -11,7 +10,7 @@ from app.database import get_db
 from app import model as m
 from app.oauth2 import create_access_token
 from app.logger import log
-from app.controller import send_email
+from app.config import settings
 
 auth_router = APIRouter(tags=["Authentication"])
 
@@ -54,7 +53,20 @@ def login(
 
     access_token = create_access_token(data={"user_id": user.id})
     log(log.INFO, "Token for user [%s] has been generated", user.email)
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    user_data = {
+        "username": user.username,
+        "email": user.email,
+        "picture": user.picture,
+        "is_deleted": user.is_deleted,
+        "created_at": user.created_at,
+        "role": user.role,
+    }
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_data,
+    }
 
 
 @auth_router.post("/google_login", response_model=s.Token)
@@ -85,42 +97,63 @@ def google_login(
             email=user_data.email,
             password=user_data.google_openid_key,
             google_openid_key=user_data.google_openid_key,
+            picture=user_data.picture,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
     access_token = create_access_token(data={"user_id": user.id})
-
     log(log.INFO, "Token for user [%s] has been generated", user_data.email)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    user.picture = user_data.picture
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    user = {
+        "username": user.username,
+        "email": user.email,
+        "picture": user.picture,
+        "is_deleted": user.is_deleted,
+        "created_at": user.created_at,
+        "role": user.role,
+    }
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user,
+    }
 
 
 @auth_router.post("/sign_up", status_code=HTTPStatus.OK)
 async def sign_up(
     user_data: s.UserSignUp, request: Request, db: Session = Depends(get_db)
 ):
+    """Signining up a new user
+
+    Args:
+        user_data (s.UserSignUp): Gets email and username
+        request (Request): request
+        db (Session, optional): Database sesion
+
+    Raises:
+        HTTPException: 422 - Error while sending email
+
+    Returns:
+        HTTP Status: 200 - OK
+    """
+    from smtplib import SMTPException
+    from app.controller import send_email
+
     user = m.User(password="*", **user_data.dict())
     db.add(user)
 
     try:
         db.commit()
-    except IntegrityError as e:
-        db.rollback()
-
-        if db.query(m.User).filter_by(email=user.email).first():
-            log(
-                log.ERROR,
-                "User with such email [%s] - exists",
-                user.email,
-            )
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT, detail="Email already exists"
-            )
-
+    except IntegrityError:
         raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=f"Database commit error: {e}",
+            status_code=HTTPStatus.CONFLICT, detail="Email already exists"
         )
 
     db.refresh(user)
@@ -129,15 +162,14 @@ async def sign_up(
         await send_email(
             user.email,
             user.username,
-            urllib.parse.urljoin(
-                request.url_for("reset_password") + "/", user.verification_token
-            ),
+            f"{settings.FRONTEND_BASE_URL}/reset_password/{user.verification_token}",
         )
-    except HTTPException:
-        db.query(m.User).filter_by(email=user.email).first().delete()
+    except SMTPException as e:
+        db.delete(user)
         db.commit()
         raise HTTPException(
-            status_code=HTTPStatus.CONFLICT,
-            detail={"message": "Errow occured while sending email"},
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Error send e-mail: {e}",
         )
+    db.commit()
     return HTTPStatus.OK
