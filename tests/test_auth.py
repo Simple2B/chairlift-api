@@ -114,7 +114,7 @@ def test_reset_password(client: TestClient, db: Session):
 
     user = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
-    assert not user.verification_token
+    assert user.verification_token
     assert user.is_verified
 
 

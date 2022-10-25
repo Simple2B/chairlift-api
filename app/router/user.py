@@ -68,7 +68,7 @@ def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
 
     user.password = data.password
-    user.verification_token = ""
+    user.verification_token = model.gen_uid()
     user.is_verified = True
     db.commit()
     return {"message": "Password has been updated"}
@@ -76,6 +76,20 @@ def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)
 
 @router.post("/forgot_password", status_code=HTTPStatus.OK)
 async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_db)):
+    """Route for the case when the user has been already registered
+    but forgot the password So email with the link for resetting the password will be sent
+
+    Args:
+        email (schema.EmailSchema): _description_
+        db (Session, optional): _description_. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: _description_
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
     user: model.User = db.query(model.User).filter_by(email=email.email).first()
     if not user:
         log(
