@@ -1,5 +1,5 @@
 # flake8: noqa F401
-from .user import User
+from .user import User, gen_uid
 from .api_key import APIKey
 from .api_keys_domain import APIKeyDomain
 from .firmware import Firmware
