@@ -71,7 +71,6 @@ def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)
     user.verification_token = ""
     user.is_verified = True
     db.commit()
-
     return {"message": "Password has been updated"}
 
 
@@ -81,7 +80,7 @@ async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_d
     if not user:
         log(
             log.WARNING,
-            "User does not exist or token expired - [%s]",
+            "User does not exist - [%s]",
             email.email,
         )
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
