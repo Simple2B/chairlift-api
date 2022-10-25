@@ -12,6 +12,7 @@ USER_EMAIL = conf.TEST_TARGET_EMAIL
 USER_PASSWORD = "secret"
 USER_GOOGLE_ID = "123456789"
 USER_PICTURE_URL = "uploads/image.png"
+USER_ID = 12345
 
 
 def test_model_relations(db: Session, test_data: dict):
@@ -62,3 +63,33 @@ def test_forget_password(client: TestClient, db: Session, monkeypatch=MonkeyPatc
         response = client.post("/api/user/forgot_password", json=request.dict())
         assert response.status_code == 200
         assert len(outbox) == 1
+
+
+def test_create_user_subscription(db: Session):
+    # check if subscription belongs to users
+    user = m.User(
+        id=USER_ID,
+        email=USER_EMAIL,
+        username=USER_NAME,
+        password=USER_PASSWORD,
+        picture=USER_PICTURE_URL,
+    )
+    subscription = m.Subscription(user_id=user.id)
+    db.add(user)
+    db.add(subscription)
+    db.commit()
+    assert user.subscription
+
+    # check if subscription DOES NOT belong to users
+    user2 = m.User(
+        id=54321,
+        email="non_existing_user@gmail.com",
+        username="non_existing_username",
+        password=USER_PASSWORD,
+        picture=USER_PICTURE_URL,
+    )
+    subscription2 = m.Subscription(user_id=999)
+    db.add(user2)
+    db.add(subscription2)
+    db.commit()
+    assert not user2.subscription

@@ -26,6 +26,9 @@ class Settings(BaseSettings):
 
     FRONTEND_BASE_URL: str = "http://localhost:3000"
 
+    STRIPE_PUBLISHABLE_KEY: str
+    STRIPE_SECRET_KEY: str
+
     class Config:
         env_file = ".env"
 

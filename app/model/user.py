@@ -10,6 +10,7 @@ from sqlalchemy import (
     func,
     Enum,
 )
+from sqlalchemy.orm import relationship
 
 from app.hash_utils import make_hash, hash_verify
 from app.database import Base, SessionLocal
@@ -60,6 +61,8 @@ class User(Base):
 
     google_openid_key = Column(String(256), nullable=True)
     apple_openid_key = Column(String(256), nullable=True)
+
+    subscription = relationship("Subscription", back_populates="user", uselist=False)
 
     @property
     def password(self):
