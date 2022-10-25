@@ -11,5 +11,6 @@ from .sensor import Sensor
 from .sensor_key import SensorKey
 from app.database import Base
 from .user_group import UserGroup
+from .subscription import Subscription
 
 # TODO make stripe payment table
