@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: str = ""
     STRIPE_SECRET_KEY: str = ""
 
+    REACT_APP_GOOGLE_CLIENT_ID: str = ""
+    REACT_APP_GOOGLE_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
 

@@ -17,3 +17,12 @@ class UserOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class GooglKeys(BaseModel):
+    google_client_id: str
+    google_api_key: str
+
+
+class StripeKey(BaseModel):
+    stripe_public_key: str

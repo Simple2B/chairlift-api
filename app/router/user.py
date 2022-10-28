@@ -111,7 +111,7 @@ async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_d
     return HTTPStatus.OK
 
 
-@router.get("/keys/google")
+@router.get("/keys/google", response_model=schema.GooglKeys)
 async def user_google_key(db: Session = Depends(get_db)):
     return {
         "google_client_id": settings.REACT_APP_GOOGLE_CLIENT_ID,
@@ -119,8 +119,9 @@ async def user_google_key(db: Session = Depends(get_db)):
     }
 
 
-@router.get("/keys/stripe")
+@router.get("/keys/stripe", response_model=schema.StripeKey)
 async def user_stripe_key(
     db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
+    current_user
     return {"stripe_public_key": settings.STRIPE_PUBLISHABLE_KEY}
