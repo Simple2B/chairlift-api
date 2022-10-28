@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from app.logger import log
 from app.config import settings
 from app.controller import send_email
-from app import model, schema, oauth2
+from app import schema, oauth2
+from app import model as m
 from app.database import get_db
 
 router = APIRouter(prefix="/user", tags=["Users"])
@@ -31,7 +32,7 @@ def get_user(
     Returns:
         User: User's instance
     """
-    user = db.query(model.User).get(id)
+    user = db.query(m.User).get(id)
 
     if not user:
         raise HTTPException(status_code=404, detail="This user was not found")
@@ -54,10 +55,8 @@ def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)
         User: User's instance
     """
 
-    user: model.User = (
-        db.query(model.User)
-        .filter_by(verification_token=data.verification_token)
-        .first()
+    user: m.User = (
+        db.query(m.User).filter_by(verification_token=data.verification_token).first()
     )
     if not user:
         log(
@@ -68,7 +67,7 @@ def reset_password(data: schema.ResetPasswordData, db: Session = Depends(get_db)
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
 
     user.password = data.password
-    user.verification_token = model.gen_uid()
+    user.verification_token = m.gen_uid()
     user.is_verified = True
     db.commit()
     return {"message": "Password has been updated"}
@@ -90,7 +89,7 @@ async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_d
     Returns:
         _type_: _description_
     """
-    user: model.User = db.query(model.User).filter_by(email=email.email).first()
+    user: m.User = db.query(m.User).filter_by(email=email.email).first()
     if not user:
         log(
             log.WARNING,
@@ -110,3 +109,18 @@ async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_d
             detail=f"Error send e-mail: {e}",
         )
     return HTTPStatus.OK
+
+
+@router.get("/keys/google")
+async def user_google_key(db: Session = Depends(get_db)):
+    return {
+        "google_client_id": settings.REACT_APP_GOOGLE_CLIENT_ID,
+        "google_api_key": settings.REACT_APP_GOOGLE_API_KEY,
+    }
+
+
+@router.get("/keys/stripe")
+async def user_stripe_key(
+    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
+):
+    return {"stripe_public_key": settings.STRIPE_PUBLISHABLE_KEY}
