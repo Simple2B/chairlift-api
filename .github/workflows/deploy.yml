@@ -8,8 +8,6 @@ on: [workflow_dispatch]
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs:
-      tests
     steps:
       - name: Deploy
         uses: appleboy/ssh-action@master
