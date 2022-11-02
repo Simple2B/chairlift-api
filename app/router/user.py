@@ -113,10 +113,16 @@ async def forgot_password(email: schema.EmailSchema, db: Session = Depends(get_d
 
 @router.get("/keys/google", response_model=schema.GooglKeys)
 async def user_google_key(db: Session = Depends(get_db)):
-    return {
+    data = {
         "google_client_id": settings.REACT_APP_GOOGLE_CLIENT_ID,
         "google_api_key": settings.REACT_APP_GOOGLE_API_KEY,
     }
+    log(
+        log.INFO,
+        "!!!! Keys google - [%s]",
+        data,
+    )
+    return data
 
 
 @router.get("/keys/stripe", response_model=schema.StripeKey)
