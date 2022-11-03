@@ -18,11 +18,14 @@ jinja2.contextfunction = jinja2.pass_context
 app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",)
+    openapi_url="/api/openapi.json",
+)
 
 sql_admin = Admin(app, engine)
 
 sql_admin.add_view(admin.user.UserAdmin)
+
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
