@@ -24,7 +24,9 @@ app = FastAPI(
 sql_admin = Admin(app, engine)
 
 sql_admin.add_view(admin.user.UserAdmin)
+
 origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
