@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "secret"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    DATABASE_URI: str = "sqlite:///./test.db"
+    DATABASE_URI: str = ""
     DEV_DATABASE_URI: str = ""
 
     ADMIN_USER: str = "admin"
