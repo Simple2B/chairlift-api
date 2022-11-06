@@ -6,10 +6,7 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "secret"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # TODO Remove DATABASE_URI
-    DATABASE_URI: str = "sqlite:///./test.db"
     DB_URI: str
-    DEV_DATABASE_URI: str = ""
 
     ADMIN_USER: str = "admin"
     ADMIN_PASS: str = "admin"
@@ -40,10 +37,10 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
+    def __hash__(self):
+        return hash((type(self),) + tuple(self.__dict__.values()))
+
 
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()
-
-
-settings = Settings()

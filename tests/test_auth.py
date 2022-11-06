@@ -5,11 +5,14 @@ from sqlalchemy.orm import Session
 
 from app import schema as s
 from app import model as m
-from app.controller.mail import mail
-from app.config import settings as conf
+from app.controller import MailClient
+from app.config import Settings
+from tests.conftest import get_test_settings
+
+settings: Settings = get_test_settings()
 
 USER_NAME = "michael"
-USER_EMAIL = conf.TEST_TARGET_EMAIL
+USER_EMAIL = settings.TEST_TARGET_EMAIL
 USER_PASSWORD = "secret"
 USER_GOOGLE_ID = "123456789"
 USER_PICTURE_URL = "uploads/image.png"
@@ -45,12 +48,14 @@ def test_google_auth(client: TestClient, db: Session):
     assert user.google_openid_key == USER_GOOGLE_ID
 
 
-def test_signup_and_email_password_reset(client: TestClient, db: Session):
+def test_signup_and_email_password_reset(
+    client: TestClient, db: Session, mail_client: MailClient
+):
     # Mocking email sending
     request_data = s.UserSignUp(email=USER_EMAIL, username=USER_NAME)
 
     # Testing email
-    with mail.record_messages() as outbox:
+    with mail_client.mail.record_messages() as outbox:
         response = client.post("/api/sign_up", json=request_data.dict())
         assert response.status_code == 200
         assert len(outbox) == 1
@@ -73,6 +78,7 @@ def test_signup_and_fail_send_email(
     from app import controller
 
     def mock_send_email(
+        self: MailClient,
         email: s.EmailListSchema,
         username: str,
         verification_link: str,
@@ -85,7 +91,9 @@ def test_signup_and_fail_send_email(
 
         raise SMTPAuthenticationError(code=56, msg="Test ERROR")
 
-    monkeypatch.setattr(controller, "send_email", mock_send_email)
+    monkeypatch.setattr(
+        controller.mail.mail_client.MailClient, "send_email", mock_send_email
+    )
     response = client.post(
         "/api/sign_up",
         json=s.UserSignUp(email=USER_EMAIL, username=USER_NAME).dict(),
@@ -112,7 +120,7 @@ def test_reset_password(client: TestClient, db: Session):
 
     assert response.ok
 
-    user = db.query(m.User).filter_by(email=USER_EMAIL).first()
+    user: m.User = db.query(m.User).filter_by(email=USER_EMAIL).first()
 
     assert user.verification_token
     assert user.is_verified
@@ -137,7 +145,7 @@ def test_login(client: TestClient, db: Session):
     assert response.status_code == HTTPStatus.NOT_ACCEPTABLE
 
     # making user verified
-    user = db.query(m.User).get(user.id)
+    user: m.User = db.query(m.User).get(user.id)
     user.is_verified = True
     db.commit()
 
@@ -148,6 +156,8 @@ def test_login(client: TestClient, db: Session):
     assert response and response.ok, "unexpected response"
 
     # get user by id
-    user = db.query(m.User).filter_by(username=USER_NAME, email=USER_EMAIL).first()
+    user: m.User = (
+        db.query(m.User).filter_by(username=USER_NAME, email=USER_EMAIL).first()
+    )
     assert user.username == USER_NAME
     assert user.email == USER_EMAIL

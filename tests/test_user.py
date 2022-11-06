@@ -4,11 +4,13 @@ from fastapi.testclient import TestClient
 
 import app.model as m
 import app.schema as s
-from app.config import settings as conf
-from app.controller.mail import mail
+from app.controller import MailClient
+from tests.conftest import get_test_settings
+
+settings = get_test_settings()
 
 USER_NAME = "michael"
-USER_EMAIL = conf.TEST_TARGET_EMAIL
+USER_EMAIL = settings.TEST_TARGET_EMAIL
 USER_PASSWORD = "secret"
 USER_GOOGLE_ID = "123456789"
 USER_PICTURE_URL = "uploads/image.png"
@@ -44,7 +46,12 @@ def test_model_relations(db: Session, test_data: dict):
     assert len(user_model.own_groups) == len(test_data["test_groups"])
 
 
-def test_forget_password(client: TestClient, db: Session, monkeypatch=MonkeyPatch):
+def test_forget_password(
+    client: TestClient,
+    db: Session,
+    mail_client: MailClient,
+    monkeypatch=MonkeyPatch,
+):
 
     # creating user
     user = m.User(
@@ -58,7 +65,7 @@ def test_forget_password(client: TestClient, db: Session, monkeypatch=MonkeyPatc
     db.refresh(user)
 
     # Testing if email has been sent
-    with mail.record_messages() as outbox:
+    with mail_client.mail.record_messages() as outbox:
         request = s.EmailSchema(email=USER_EMAIL)
         response = client.post("/api/user/forgot_password", json=request.dict())
         assert response.status_code == 200

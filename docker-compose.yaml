@@ -18,8 +18,6 @@ services:
     volumes:
       - ${PWD}/prod.env:/app/.env
     command: bash ./start_server.sh
-    environment:
-      DATABASE_URI: ${PROD_DATABASE_URI}
     ports:
       - 127.0.0.1:8008:80
     depends_on:
