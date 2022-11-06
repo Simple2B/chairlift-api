@@ -1,6 +1,8 @@
 import pytest
 import json
 from typing import Generator
+from functools import lru_cache
+from dotenv import dotenv_values
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -9,6 +11,13 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db
 from app.config import settings as conf
+from app.config import Settings
+from app import config
+
+
+@lru_cache
+def get_test_settings() -> Settings:
+    return Settings(**dotenv_values("tests/test.env"))
 
 
 @pytest.fixture
@@ -50,3 +59,10 @@ def db() -> Generator:
         app.dependency_overrides[get_db] = override_get_db
 
         yield db
+
+
+pytest_plugins = [
+    "tests.fixture.gateway_channel",
+]
+
+config.get_settings = get_test_settings

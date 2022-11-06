@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pydantic import BaseSettings, EmailStr
 
 
@@ -5,12 +6,14 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "secret"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # TODO Remove DATABASE_URI
     DATABASE_URI: str = "sqlite:///./test.db"
+    DB_URI: str
     DEV_DATABASE_URI: str = ""
 
     ADMIN_USER: str = "admin"
     ADMIN_PASS: str = "admin"
-    ADMIN_EMAIL: EmailStr = "admin@unknown.li"
+    ADMIN_EMAIL: EmailStr
 
     # SMTP client
     MAIL_USERNAME: str = "!unknown!"
@@ -32,8 +35,15 @@ class Settings(BaseSettings):
     REACT_APP_GOOGLE_CLIENT_ID: str = ""
     REACT_APP_GOOGLE_API_KEY: str = ""
 
+    GW_TCP_SERVER_PORT: int
+
     class Config:
         env_file = ".env"
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
 
 
 settings = Settings()
