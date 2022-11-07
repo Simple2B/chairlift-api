@@ -27,6 +27,7 @@ class GatewayTCPClient:
 SETTINGS_MAP: dict = {
     "GW_TCP_SERVER_PORT": "PORT",
 }
+SERVER_PING_RETRY_AMOUNT: int = 10
 
 
 @lru_cache
@@ -58,7 +59,7 @@ async def gateway_client() -> AsyncIterator[GatewayTCPClient]:
 
     # Wait till server up
     server_started = False
-    for i in range(3):
+    for i in range(SERVER_PING_RETRY_AMOUNT):
         try:
             _, writer = await asyncio.open_connection("127.0.0.1", sc.PORT)
             server_started = True
