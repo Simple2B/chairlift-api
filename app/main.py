@@ -1,6 +1,6 @@
+from sqlalchemy.engine import Engine
 from fastapi import APIRouter
-from .config import settings
-from app.database import engine
+from app.database import get_engine
 from app import admin
 from app.router import router
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +21,7 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+engine: Engine = get_engine()
 sql_admin = Admin(app, engine)
 
 sql_admin.add_view(admin.user.UserAdmin)

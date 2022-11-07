@@ -10,7 +10,8 @@ from app.database import get_db
 from app import model as m
 from app.oauth2 import create_access_token
 from app.logger import log
-from app.config import settings
+from app.controller import MailClient, get_mail_client
+from app.config import Settings, get_settings
 
 auth_router = APIRouter(tags=["Authentication"])
 
@@ -128,7 +129,11 @@ def google_login(
 
 @auth_router.post("/sign_up", status_code=HTTPStatus.OK)
 async def sign_up(
-    user_data: s.UserSignUp, request: Request, db: Session = Depends(get_db)
+    user_data: s.UserSignUp,
+    request: Request,
+    db: Session = Depends(get_db),
+    mail_client: MailClient = Depends(get_mail_client),
+    settings: Settings = Depends(get_settings),
 ):
     """Signining up a new user
 
@@ -143,7 +148,6 @@ async def sign_up(
     Returns:
         HTTP Status: 200 - OK
     """
-    from app.controller import send_email
 
     user = m.User(password="*", **user_data.dict())
     db.add(user)
@@ -159,7 +163,7 @@ async def sign_up(
     db.refresh(user)
 
     try:
-        await send_email(
+        await mail_client.send_email(
             user.email,
             user.username,
             f"{settings.FRONTEND_BASE_URL}/reset_password/{user.verification_token}",

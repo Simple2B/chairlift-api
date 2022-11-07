@@ -13,7 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.hash_utils import make_hash, hash_verify
-from app.database import Base, SessionLocal
+from app.database import Base, Session
 from .role import Role
 
 
@@ -73,7 +73,7 @@ class User(Base):
         self.password_hash = make_hash(value)
 
     @classmethod
-    def authenticate(cls, db: SessionLocal, user_id: str, password: str):
+    def authenticate(cls, db: Session, user_id: str, password: str):
         user = (
             db.query(cls)
             .filter(
