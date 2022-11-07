@@ -49,6 +49,7 @@ def start_gw_tcp_server() -> None:
 
 @pytest_asyncio.fixture
 async def gateway_client() -> AsyncIterator[GatewayTCPClient]:
+    """Create TCP gateway server and return gateway client"""
     sc: ServerConfig = get_tcp_server_config()
 
     # Start gateway channel
