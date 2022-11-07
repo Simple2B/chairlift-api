@@ -3,7 +3,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import schema as s
 from app.database import get_db
@@ -148,14 +148,15 @@ async def sign_up(
     Returns:
         HTTP Status: 200 - OK
     """
-    from smtplib import SMTPException
+    from app.controller import send_email
 
     user = m.User(password="*", **user_data.dict())
     db.add(user)
 
     try:
         db.commit()
-    except IntegrityError:
+    except SQLAlchemyError as e:
+        log(log.ERROR, "SQLAlchemyError:[%s]", e)
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT, detail="Email already exists"
         )
@@ -168,12 +169,15 @@ async def sign_up(
             user.username,
             f"{settings.FRONTEND_BASE_URL}/reset_password/{user.verification_token}",
         )
-    except SMTPException as e:
+    except Exception as e:
+        log(log.ERROR, "Error: [%s]", e)
         db.delete(user)
         db.commit()
+
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=f"Error send e-mail: {e}",
         )
+
     db.commit()
     return HTTPStatus.OK

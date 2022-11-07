@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from smtplib import SMTPException
 
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
@@ -35,7 +34,10 @@ def get_user(
     user = db.query(m.User).get(id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="This user was not found")
+        log(log.INFO, "User was not found [%s]", user.email)
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="This user was not found"
+        )
 
     return user
 
@@ -69,9 +71,15 @@ def reset_password(
         )
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
 
+    log(
+        log.INFO,
+        "Resetting user password...\nRegenerating verification token...\nMaking user - [%s] verified",
+        user.email,
+    )
     user.password = data.password
     user.verification_token = m.gen_uid()
     user.is_verified = True
+
     db.commit()
     return {"message": "Password has been updated"}
 
@@ -111,7 +119,9 @@ async def forgot_password(
             user.username,
             f"{settings.FRONTEND_BASE_URL}/reset_password/{user.verification_token}",
         )
-    except SMTPException as e:
+    except Exception as e:
+        log(log.ERROR, "Error: [%s]", e)
+
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=f"Error send e-mail: {e}",
@@ -129,7 +139,7 @@ async def user_google_key(
     }
     log(
         log.INFO,
-        "!!!! Keys google - [%s]",
+        "Google keys - [%s]",
         data,
     )
     return data
