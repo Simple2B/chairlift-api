@@ -4,7 +4,6 @@ from starlette.responses import JSONResponse
 from pydantic import EmailStr
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-from app import schema as s
 from app.config import Settings
 
 

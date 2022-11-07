@@ -148,7 +148,6 @@ async def sign_up(
     Returns:
         HTTP Status: 200 - OK
     """
-    from app.controller import send_email
 
     user = m.User(password="*", **user_data.dict())
     db.add(user)
