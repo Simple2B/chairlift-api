@@ -1,6 +1,7 @@
 import asyncio
 from asyncio import StreamReader, StreamWriter
 from .schema import ServerConfig
+from app.logger import log
 
 
 class TCPServer:
@@ -13,10 +14,8 @@ class TCPServer:
     async def _run(self) -> None:
         server = await asyncio.start_server(self.connect, "0.0.0.0", self.config.PORT)
 
-        # TODO replace by logger
         addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
-        print(f"Serving on {addrs}")
-
+        log(log.INFO, "Server served at [%s]", str(addrs))
         async with server:
             await server.serve_forever()
 

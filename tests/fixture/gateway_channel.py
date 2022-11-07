@@ -58,7 +58,7 @@ async def gateway_client() -> AsyncIterator[GatewayTCPClient]:
 
     # Wait till server up
     server_started = False
-    for i in range(60):
+    for i in range(3):
         try:
             _, writer = await asyncio.open_connection("127.0.0.1", sc.PORT)
             server_started = True
@@ -68,6 +68,7 @@ async def gateway_client() -> AsyncIterator[GatewayTCPClient]:
             time.sleep(1)
 
     if not server_started:
+        tcp_gw_server_proc.join()
         raise TimeoutError
 
     # Return TCP client and kill TCP server after test
